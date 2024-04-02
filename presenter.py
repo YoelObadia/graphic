@@ -13,20 +13,31 @@ class WeaponPresenter(QObject):
     def __init__(self):
         super().__init__()
 
+    def create_weapon_from_data(self, weapon_data):
+        return Weapon(weapon_data['id'], weapon_data['name'], weapon_data['type'],
+                    weapon_data['manufacturer'], weapon_data['caliber'],
+                    weapon_data['magazineCapacity'], weapon_data['fireRate'],
+                    weapon_data['ammoCount'])
+
     def load_weapon(self, weapon_id):
         try:
             response = requests.get(f"http://localhost:5166/api/Weapon/{weapon_id}")
             if response.status_code == 200:
                 weapon_data = response.json()
-                weapon = Weapon(weapon_data['id'], weapon_data['name'], weapon_data['type'],
-                                weapon_data['manufacturer'], weapon_data['caliber'],
-                                weapon_data['magazineCapacity'], weapon_data['fireRate'],
-                                weapon_data['ammoCount'])
+                weapon = self.create_weapon_from_data(weapon_data)
                 self.weapon_loaded.emit(weapon)
             else:
                 self.error_occurred.emit(f"Failed to load weapon: {response.status_code}")
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
+
+    def weapon_exists(self, weapon_id):
+        try:
+            response = requests.get(f"http://localhost:5166/api/Weapon/{weapon_id}")
+            return response.status_code == 200
+        except Exception as e:
+            print(f"An error occurred while checking weapon existence: {str(e)}")
+            return False
 
     def load_all_weapons(self):
         try:
@@ -54,15 +65,33 @@ class WeaponPresenter(QObject):
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
 
-    def update_weapon(self, weapon_id, updated_weapon_data):  # Modification de la signature
+    def update_weapon(self, weapon_id, updated_weapon_data):
         try:
-            response = requests.put(f"http://localhost:5166/api/Weapon/{weapon_id}", json=updated_weapon_data)  # Utilisation de l'ID dans l'URL
+            print("Updated weapon data:", updated_weapon_data)  
+            response = requests.put(f"http://localhost:5166/api/Weapon/{weapon_id}", json=updated_weapon_data)
+            print("Response status code:", response.status_code)  
             if response.status_code == 200:
                 self.weapon_updated.emit(weapon_id)
             else:
                 self.error_occurred.emit(f"Failed to update weapon: {response.status_code}")
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
+
+
+    def load_weapon_details(self, weapon_id):
+        try:
+            response = requests.get(f"http://localhost:5166/api/Weapon/{weapon_id}")
+            if response.status_code == 200:
+                weapon_data = response.json()
+                return Weapon(weapon_data['id'], weapon_data['name'], weapon_data['type'],
+                                weapon_data['manufacturer'], weapon_data['caliber'],
+                                weapon_data['magazineCapacity'], weapon_data['fireRate'],
+                                weapon_data['ammoCount'])
+            else:
+                self.error_occurred.emit(f"Failed to load weapon details: {response.status_code}")
+        except Exception as e:
+            self.error_occurred.emit(f"An error occurred: {str(e)}")
+
 
     def delete_weapon(self, weapon_id):
         try:
