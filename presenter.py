@@ -67,15 +67,14 @@ class WeaponPresenter(QObject):
 
     def update_weapon(self, weapon_id, updated_weapon_data):
         try:
-            print("Updated weapon data:", updated_weapon_data)  
             response = requests.put(f"http://localhost:5166/api/Weapon/{weapon_id}", json=updated_weapon_data)
-            print("Response status code:", response.status_code)  
-            if response.status_code == 200:
-                self.weapon_updated.emit(weapon_id)
+            if response.status_code in [200, 204]:  # Traiter 200 et 204 comme des succès
+                return True
             else:
-                self.error_occurred.emit(f"Failed to update weapon: {response.status_code}")
+                return False
         except Exception as e:
-            self.error_occurred.emit(f"An error occurred: {str(e)}")
+            print(f"An error occurred while updating weapon: {str(e)}")
+            return False
 
 
     def load_weapon_details(self, weapon_id):
