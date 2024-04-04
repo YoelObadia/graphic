@@ -1,5 +1,5 @@
 class Weapon:
-    def __init__(self, Id, Name, Type, Manufacturer, Caliber, MagazineCapacity, FireRate, AmmoCount):
+    def __init__(self, Id, Name, Type, Manufacturer, Caliber, MagazineCapacity, FireRate, AmmoCount, Images=None):
         self.Id = Id
         self.Name = Name
         self.Type = Type
@@ -8,3 +8,4 @@ class Weapon:
         self.MagazineCapacity = MagazineCapacity
         self.FireRate = FireRate
         self.AmmoCount = AmmoCount
+        self.Images = Images  

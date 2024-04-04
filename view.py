@@ -100,6 +100,8 @@ class WeaponView(QMainWindow):
         self.fire_rate_input.setPlaceholderText("Enter fire rate")
         self.ammo_count_input = QLineEdit()
         self.ammo_count_input.setPlaceholderText("Enter ammo count")
+        self.images_input = QLineEdit()  # Ajout du champ Images
+        self.images_input.setPlaceholderText("Enter images URL")
         self.save_button = QPushButton("Add")
         self.back_button_add = QPushButton("Back")
 
@@ -118,6 +120,8 @@ class WeaponView(QMainWindow):
         layout.addWidget(self.fire_rate_input)
         layout.addWidget(QLabel("Ammo Count:"))
         layout.addWidget(self.ammo_count_input)
+        layout.addWidget(QLabel("Images:"))  # Ajout du label pour Images
+        layout.addWidget(self.images_input)  # Ajout du champ Images
         layout.addWidget(self.save_button)
         layout.addWidget(self.back_button_add)
 
@@ -146,7 +150,8 @@ class WeaponView(QMainWindow):
             "Caliber": self.caliber_input.text(),
             "MagazineCapacity": int(self.magazine_capacity_input.text()),
             "FireRate": int(self.fire_rate_input.text()),
-            "AmmoCount": int(self.ammo_count_input.text())
+            "AmmoCount": int(self.ammo_count_input.text()),
+            "Images": self.images_input.text()  # Ajout des images
         }
         self.presenter.add_weapon(new_weapon_data)
         self.clear_add_weapon_fields()
@@ -160,14 +165,49 @@ class WeaponView(QMainWindow):
         self.magazine_capacity_input.clear()
         self.fire_rate_input.clear()
         self.ammo_count_input.clear()
+        self.images_input.clear()  # Nettoyer le champ des images
 
     def display_weapon_added_message(self, weapon_id):
         QMessageBox.information(self, 'Success', f"Weapon added successfully with ID: {weapon_id}")
 
 
+# Update region ------------------------------------------------
+    def create_update_weapon_page(self):
+        self.update_name_input = QLineEdit()
+        self.update_type_input = QLineEdit()
+        self.update_manufacturer_input = QLineEdit()
+        self.update_caliber_input = QLineEdit()
+        self.update_magazine_capacity_input = QLineEdit()
+        self.update_fire_rate_input = QLineEdit()
+        self.update_ammo_count_input = QLineEdit()
+        self.update_images_input = QLineEdit()  # Ajout du champ Images pour la mise à jour
+        self.update_save_button = QPushButton("Update")
+        self.back_button_update = QPushButton("Back")
 
-# Load region ------------------------------------------------
-    def load_weapon(self):
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Name:"))
+        layout.addWidget(self.update_name_input)
+        layout.addWidget(QLabel("Type:"))
+        layout.addWidget(self.update_type_input)
+        layout.addWidget(QLabel("Manufacturer:"))
+        layout.addWidget(self.update_manufacturer_input)
+        layout.addWidget(QLabel("Caliber:"))
+        layout.addWidget(self.update_caliber_input)
+        layout.addWidget(QLabel("Magazine Capacity:"))
+        layout.addWidget(self.update_magazine_capacity_input)
+        layout.addWidget(QLabel("Fire Rate:"))
+        layout.addWidget(self.update_fire_rate_input)
+        layout.addWidget(QLabel("Ammo Count:"))
+        layout.addWidget(self.update_ammo_count_input)
+        layout.addWidget(QLabel("Images:"))  # Ajout du label pour Images
+        layout.addWidget(self.update_images_input)  # Ajout du champ Images pour la mise à jour
+        layout.addWidget(self.update_save_button)
+        layout.addWidget(self.back_button_update)
+
+        self.update_weapon_widget = QWidget()
+        self.update_weapon_widget.setLayout(layout)
+
+    def show_update_weapon_page(self):
         weapon_id = self.weapon_id_input.text()
         if not weapon_id or weapon_id.isdigit() is False:
             QMessageBox.warning(self, 'Error', "Please enter a valid weapon ID.")
@@ -177,50 +217,50 @@ class WeaponView(QMainWindow):
             QMessageBox.warning(self, 'Error', f"Weapon with ID {weapon_id} does not exist.")
             self.weapon_id_input.clear()
             return
-        self.presenter.load_weapon(int(weapon_id))
+        # Load the weapon details to be updated
+        if (weapon_details := self.presenter.load_weapon_details(int(weapon_id))):
+            self.fill_update_weapon_fields(weapon_details)
+        self.stacked_layout.setCurrentIndex(2)
 
-    def show_weapon_details_page(self, weapon):
-        """
-        Displays the weapon details in the weapon details page.
-        """
-        self.stacked_layout.setCurrentIndex(4)  # Index of the weapon details page
+    def fill_update_weapon_fields(self, weapon_details):
+        self.update_name_input.setText(weapon_details.Name)
+        self.update_type_input.setText(weapon_details.Type)
+        self.update_manufacturer_input.setText(weapon_details.Manufacturer)
+        self.update_caliber_input.setText(weapon_details.Caliber)
+        self.update_magazine_capacity_input.setText(str(weapon_details.MagazineCapacity))
+        self.update_fire_rate_input.setText(str(weapon_details.FireRate))
+        self.update_ammo_count_input.setText(str(weapon_details.AmmoCount))
+        self.update_images_input.setText(weapon_details.Images)  # Remplir le champ Images
 
-        # Construct the text to display the weapon details
-        details_text = "<h2>Weapon Details</h2>"
-        details_text += f"<b>ID:</b> {weapon.Id}<br>"
-        details_text += f"<b>Name:</b> {weapon.Name}<br>"
-        details_text += f"<b>Type:</b> {weapon.Type}<br>"
-        details_text += f"<b>Manufacturer:</b> {weapon.Manufacturer}<br>"
-        details_text += f"<b>Caliber:</b> {weapon.Caliber}<br>"
-        details_text += f"<b>Magazine Capacity:</b> {weapon.MagazineCapacity}<br>"
-        details_text += f"<b>Fire Rate:</b> {weapon.FireRate}<br>"
-        details_text += f"<b>Ammo Count:</b> {weapon.AmmoCount}<br>"
+    def update_weapon(self):  
+        weapon_id = self.weapon_id_input.text()
+        updated_weapon_data = {
+            "Id": weapon_id,
+            "Name": self.update_name_input.text(),
+            "Type": self.update_type_input.text(),
+            "Manufacturer": self.update_manufacturer_input.text(),
+            "Caliber": self.update_caliber_input.text(),
+            "MagazineCapacity": int(self.update_magazine_capacity_input.text()),
+            "FireRate": int(self.update_fire_rate_input.text()),
+            "AmmoCount": int(self.update_ammo_count_input.text()),
+            "Images": self.update_images_input.text()  # Ajout des images pour la mise à jour
+        }
+        self.presenter.update_weapon(int(weapon_id), updated_weapon_data)
+        self.clear_update_weapon_fields()
+        self.stacked_layout.setCurrentIndex(0)
 
-        # Set the text to the label to display the details
-        self.weapon_details_label.setText(details_text)
+    def clear_update_weapon_fields(self):
+        self.update_name_input.clear()
+        self.update_type_input.clear()
+        self.update_manufacturer_input.clear()
+        self.update_caliber_input.clear()
+        self.update_magazine_capacity_input.clear()
+        self.update_fire_rate_input.clear()
+        self.update_ammo_count_input.clear()
+        self.update_images_input.clear()  # Nettoyer le champ des images
 
-    def create_weapon_details_page(self):
-        """
-        Creates the page to display weapon details.
-        """
-        self.weapon_details_widget = QWidget()
-
-        # Widgets for displaying weapon details
-        self.weapon_details_label = QLabel()
-        self.back_button = QPushButton("Back")
-
-        # Layout for the weapon details page
-        layout = QVBoxLayout()
-        layout.addWidget(self.weapon_details_label)
-        layout.addWidget(self.back_button, alignment=Qt.AlignCenter)  # Align the back button to the center
-
-        # Set the layout for the widget
-        self.weapon_details_widget.setLayout(layout)
-
-        # Connect the back button to the method to return to the 'Get by ID' page
-        
-        self.back_button.clicked.connect(self.show_get_by_id_page)
-
+    def display_weapon_updated_message(self, weapon_id):
+        QMessageBox.information(self, 'Success', f"Weapon updated successfully with ID: {weapon_id}")
 
 
 # Load all region ------------------------------------------------
@@ -262,6 +302,7 @@ class WeaponView(QMainWindow):
             weapons_text += f"<b>Magazine Capacity:</b> {weapon.MagazineCapacity}<br>"
             weapons_text += f"<b>Fire Rate:</b> {weapon.FireRate}<br>"
             weapons_text += f"<b>Ammo Count:</b> {weapon.AmmoCount}<br>"
+            weapons_text += f"<b>Images:</b> {weapon.Images}<br>"  # Afficher les images
             weapons_text += "<hr>"  # Add a horizontal line between weapons
 
         # Set the text to the label to display all loaded weapons
@@ -270,62 +311,9 @@ class WeaponView(QMainWindow):
     def load_all_weapons(self):
         self.presenter.load_all_weapons()
 
-    #def display_all_weapons_table(self, weapons):
-    #    self.table.setRowCount(len(weapons))
-    #    self.table.setColumnCount(8)
-    #    self.table.setHorizontalHeaderLabels(["ID", "Name", "Type", "Manufacturer", "Caliber", "Magazine Capacity", "Fire Rate", "Ammo Count"])
-    #    for row, weapon in enumerate(weapons):
-    #        self.set_table_item_values(row, weapon)
-#
-    #def set_table_item_values(self, row, weapon):
-    #    self.set_table_item(row, 0, str(weapon.Id))
-    #    self.set_table_item(row, 1, weapon.Name)
-    #    self.set_table_item(row, 2, weapon.Type)
-    #    self.set_table_item(row, 3, weapon.Manufacturer)
-    #    self.set_table_item(row, 4, weapon.Caliber)
-    #    self.set_table_item(row, 5, str(weapon.MagazineCapacity))
-    #    self.set_table_item(row, 6, str(weapon.FireRate))
-    #    self.set_table_item(row, 7, str(weapon.AmmoCount))
-#
-    #def set_table_item(self, row, column, value):
-    #    self.table.setItem(row, column, QTableWidgetItem(value))
 
-
-
-# Update region ------------------------------------------------
-    def create_update_weapon_page(self):
-        self.update_name_input = QLineEdit()
-        self.update_type_input = QLineEdit()
-        self.update_manufacturer_input = QLineEdit()
-        self.update_caliber_input = QLineEdit()
-        self.update_magazine_capacity_input = QLineEdit()
-        self.update_fire_rate_input = QLineEdit()
-        self.update_ammo_count_input = QLineEdit()
-        self.update_save_button = QPushButton("Update")
-        self.back_button_update = QPushButton("Back")
-
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel("Name:"))
-        layout.addWidget(self.update_name_input)
-        layout.addWidget(QLabel("Type:"))
-        layout.addWidget(self.update_type_input)
-        layout.addWidget(QLabel("Manufacturer:"))
-        layout.addWidget(self.update_manufacturer_input)
-        layout.addWidget(QLabel("Caliber:"))
-        layout.addWidget(self.update_caliber_input)
-        layout.addWidget(QLabel("Magazine Capacity:"))
-        layout.addWidget(self.update_magazine_capacity_input)
-        layout.addWidget(QLabel("Fire Rate:"))
-        layout.addWidget(self.update_fire_rate_input)
-        layout.addWidget(QLabel("Ammo Count:"))
-        layout.addWidget(self.update_ammo_count_input)
-        layout.addWidget(self.update_save_button)
-        layout.addWidget(self.back_button_update)
-
-        self.update_weapon_widget = QWidget()
-        self.update_weapon_widget.setLayout(layout)
-
-    def show_update_weapon_page(self):
+# Load region ------------------------------------------------
+    def load_weapon(self):
         weapon_id = self.weapon_id_input.text()
         if not weapon_id or weapon_id.isdigit() is False:
             QMessageBox.warning(self, 'Error', "Please enter a valid weapon ID.")
@@ -335,56 +323,47 @@ class WeaponView(QMainWindow):
             QMessageBox.warning(self, 'Error', f"Weapon with ID {weapon_id} does not exist.")
             self.weapon_id_input.clear()
             return
-        # Load the weapon details to be updated
-        if (weapon_details := self.presenter.load_weapon_details(int(weapon_id))):
-            self.fill_update_weapon_fields(weapon_details)
-        self.stacked_layout.setCurrentIndex(2)
+        self.presenter.load_weapon(int(weapon_id))
 
-    def fill_update_weapon_fields(self, weapon_details):
-        self.update_name_input.setText(weapon_details.Name)
-        self.update_type_input.setText(weapon_details.Type)
-        self.update_manufacturer_input.setText(weapon_details.Manufacturer)
-        self.update_caliber_input.setText(weapon_details.Caliber)
-        self.update_magazine_capacity_input.setText(str(weapon_details.MagazineCapacity))
-        self.update_fire_rate_input.setText(str(weapon_details.FireRate))
-        self.update_ammo_count_input.setText(str(weapon_details.AmmoCount))
+    def show_weapon_details_page(self, weapon):
+        """
+        Displays the weapon details in the weapon details page.
+        """
+        self.stacked_layout.setCurrentIndex(4)  # Index of the weapon details page
 
-    def update_weapon(self):  
-        weapon_id = self.weapon_id_input.text()
-        updated_weapon_data = {
-            "Id": weapon_id,
-            "Name": self.update_name_input.text(),
-            "Type": self.update_type_input.text(),
-            "Manufacturer": self.update_manufacturer_input.text(),
-            "Caliber": self.update_caliber_input.text(),
-            "MagazineCapacity": int(self.update_magazine_capacity_input.text()),
-            "FireRate": int(self.update_fire_rate_input.text()),
-            "AmmoCount": int(self.update_ammo_count_input.text())
-        }
-        success = self.presenter.update_weapon(int(weapon_id), updated_weapon_data)
-        #if success:
-        #    QMessageBox.information(self, 'Success', f"Weapon updated successfully with ID: {weapon_id}")
-        #else:
-        #    QMessageBox.warning(self, 'Error', f"Failed to update weapon with ID: {weapon_id}")
-        self.clear_update_weapon_fields()
-        self.stacked_layout.setCurrentIndex(0)
-
-    def update_weapon_details(self, weapon):
-        details_text = f"Id:{weapon.Id} \nName: {weapon.Name}\nType: {weapon.Type}\nManufacturer: {weapon.Manufacturer}\nCaliber: {weapon.Caliber}\nMagazine Capacity: {weapon.MagazineCapacity}\nFire Rate: {weapon.FireRate}\nAmmo Count: {weapon.AmmoCount}"
+        # Construct the text to display the weapon details
+        details_text = "<h2>Weapon Details</h2>"
+        details_text += f"<b>ID:</b> {weapon.Id}<br>"
+        details_text += f"<b>Name:</b> {weapon.Name}<br>"
+        details_text += f"<b>Type:</b> {weapon.Type}<br>"
+        details_text += f"<b>Manufacturer:</b> {weapon.Manufacturer}<br>"
+        details_text += f"<b>Caliber:</b> {weapon.Caliber}<br>"
+        details_text += f"<b>Magazine Capacity:</b> {weapon.MagazineCapacity}<br>"
+        details_text += f"<b>Fire Rate:</b> {weapon.FireRate}<br>"
+        details_text += f"<b>Ammo Count:</b> {weapon.AmmoCount}<br>"
+        details_text += f"<b>Images:</b> {weapon.Images}<br>"  # Afficher les images
         self.weapon_details_label.setText(details_text)
 
-    def clear_update_weapon_fields(self):
-        self.update_name_input.clear()
-        self.update_type_input.clear()
-        self.update_manufacturer_input.clear()
-        self.update_caliber_input.clear()
-        self.update_magazine_capacity_input.clear()
-        self.update_fire_rate_input.clear()
-        self.update_ammo_count_input.clear()
+    def create_weapon_details_page(self):
+        """
+        Creates the page to display weapon details.
+        """
+        self.weapon_details_widget = QWidget()
 
-    def display_weapon_updated_message(self, weapon_id):
-        QMessageBox.information(self, 'Success', f"Weapon updated successfully with ID: {weapon_id}")
+        # Widgets for displaying weapon details
+        self.weapon_details_label = QLabel()
+        self.back_button = QPushButton("Back")
 
+        # Layout for the weapon details page
+        layout = QVBoxLayout()
+        layout.addWidget(self.weapon_details_label)
+        layout.addWidget(self.back_button, alignment=Qt.AlignCenter)  # Align the back button to the center
+
+        # Set the layout for the widget
+        self.weapon_details_widget.setLayout(layout)
+
+        # Connect the back button to the method to return to the 'Get by ID' page
+        self.back_button.clicked.connect(self.show_get_by_id_page)
 
 
 # Delete region ------------------------------------------------
@@ -408,7 +387,6 @@ class WeaponView(QMainWindow):
 
     def display_weapon_deleted_message(self, weapon_id):
         QMessageBox.information(self, 'Success', f"Weapon deleted successfully with ID: {weapon_id}")
-
 
 
 if __name__ == "__main__":
