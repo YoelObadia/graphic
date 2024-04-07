@@ -1,4 +1,5 @@
 import sys
+import json
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QTableWidgetItem, QMessageBox, QStackedLayout
 from PyQt5.QtCore import Qt
 from presenter import WeaponPresenter
@@ -17,6 +18,7 @@ class WeaponView(QMainWindow):
         self.create_update_weapon_page()
         self.create_all_weapons_page()
         self.create_weapon_details_page()
+        self.create_search_page()
 
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.get_by_id_widget)
@@ -24,6 +26,7 @@ class WeaponView(QMainWindow):
         self.stacked_layout.addWidget(self.update_weapon_widget)
         self.stacked_layout.addWidget(self.all_weapons_widget)
         self.stacked_layout.addWidget(self.weapon_details_widget)
+        self.stacked_layout.addWidget(self.search_widget)
 
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.stacked_layout)
@@ -38,12 +41,14 @@ class WeaponView(QMainWindow):
         self.update_save_button.clicked.connect(self.update_weapon)
         self.back_button_add.clicked.connect(self.show_get_by_id_page)
         self.back_button_update.clicked.connect(self.show_get_by_id_page)
+        self.search_button.clicked.connect(self.search_url)
         self.presenter.weapon_loaded.connect(self.show_weapon_details_page)
         self.presenter.all_weapons_loaded.connect(self.show_all_weapons_page)
         self.presenter.error_occurred.connect(self.display_error)
         self.presenter.weapon_added.connect(self.display_weapon_added_message)
         self.presenter.weapon_deleted.connect(self.display_weapon_deleted_message)
         self.presenter.weapon_updated.connect(self.display_weapon_updated_message)
+        self.presenter.url_founded.connect(self.show_search_page)
 
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
@@ -64,6 +69,8 @@ class WeaponView(QMainWindow):
         self.load_all_button = QPushButton("Load All Weapons")
         self.update_button = QPushButton("Update Weapon")
         self.delete_button = QPushButton("Delete Weapon")
+        self.url_input = QLineEdit()
+        self.search_button = QPushButton("Search")
 
         layout = QVBoxLayout()
         layout.addWidget(self.weapon_id_input)
@@ -72,6 +79,8 @@ class WeaponView(QMainWindow):
         layout.addWidget(self.load_all_button)
         layout.addWidget(self.update_button)
         layout.addWidget(self.delete_button)
+        layout.addWidget(self.url_input)
+        layout.addWidget(self.search_button)
 
         self.get_by_id_widget = QWidget()
         self.get_by_id_widget.setLayout(layout)
@@ -82,8 +91,44 @@ class WeaponView(QMainWindow):
 
     def display_error(self, error_message):
         print(f"Error: {error_message}")
+        
 
+# Search region ------------------------------------------------
 
+    def search_url(self):
+        url = self.url_input.text()
+        self.url_input.clear()
+        self.presenter.search_url(url)
+
+    def create_search_page(self):
+        self.search_widget = QWidget()
+        layout = QVBoxLayout()
+        self.search_widget.setLayout(layout)
+        self.result_label = QLabel()
+        layout.addWidget(self.result_label)
+        back_to_main_button = QPushButton("Back to Main")
+        layout.addWidget(back_to_main_button)
+        back_to_main_button.clicked.connect(self.show_get_by_id_page)
+
+    def show_search_page(self, result):
+        try:
+            # Convertir la chaîne JSON en dictionnaire Python
+            result_dict = json.loads(result)
+            # Récupérer les 7 premiers tags avec leur niveau de confiance
+            tags_with_confidence = result_dict['result']['tags'][:7]    
+            # Trier les tags par ordre décroissant de confiance
+            sorted_tags = sorted(tags_with_confidence, key=lambda x: x['confidence'], reverse=True)    
+            # Extraire les noms des tags seulement
+            tags = [tag['tag']['en'] for tag in sorted_tags]    
+            # Créer une chaîne de texte avec les tags séparés par des sauts de ligne
+            tags_text = "\n".join(tags)    
+            # Afficher les tags dans le label
+            self.result_label.setText(tags_text)
+        except (json.JSONDecodeError, KeyError):
+            self.result_label.setText("No tags found")    
+        # Changer l'index du layout pour afficher la page de recherche
+        self.stacked_layout.setCurrentIndex(5)
+    
 # Add region ------------------------------------------------
     def create_add_weapon_page(self):
         self.name_input = QLineEdit()

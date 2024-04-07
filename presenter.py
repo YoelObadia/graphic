@@ -8,7 +8,8 @@ class WeaponPresenter(QObject):
     error_occurred = pyqtSignal(str)
     weapon_added = pyqtSignal(int)  
     weapon_deleted = pyqtSignal(int)  
-    weapon_updated = pyqtSignal(int)  
+    weapon_updated = pyqtSignal(int) 
+    url_founded = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -90,3 +91,15 @@ class WeaponPresenter(QObject):
                 self.error_occurred.emit(f"Failed to delete weapon: {response.status_code}")
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
+
+    def search_url(self, image_url):
+        try:
+            # Modifier l'URL pour correspondre à votre endpoint Imagga
+            response = requests.get(f"http://localhost:5166/api/Imagga/classify?imageUrl={image_url}")
+            if response.status_code == 200:
+                self.url_founded.emit(response.content.decode('utf-8'))
+            else:
+                self.error_occurred.emit(f"Failed to load image: {response.status_code}")
+        except Exception as e:
+            self.error_occurred.emit(f"An error occurred: {str(e)}")
+
