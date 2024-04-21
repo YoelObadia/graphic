@@ -1,4 +1,5 @@
 import requests
+import openai
 from PyQt5.QtCore import QObject, pyqtSignal
 from model import Weapon
 
@@ -9,10 +10,13 @@ class WeaponPresenter(QObject):
     weapon_added = pyqtSignal(int)  
     weapon_deleted = pyqtSignal(int)  
     weapon_updated = pyqtSignal(int) 
-    url_founded = pyqtSignal(str)
+    keyword_founded = pyqtSignal(str)
+    openai_founded = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
+        
+    #openai.api_key = "sk-proj-sSqIZQdz54XiGokWUEmiT3BlbkFJUcVZTINcnTAOZUSl0blz"
 
     def create_weapon_from_data(self, weapon_data):
         return Weapon(weapon_data['id'], weapon_data['name'], weapon_data['type'],
@@ -92,14 +96,33 @@ class WeaponPresenter(QObject):
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
 
-    def search_url(self, image_url):
+    def search_keyword(self, keyword):
         try:
-            # Modifier l'URL pour correspondre à votre endpoint Imagga
-            response = requests.get(f"http://localhost:5166/api/Imagga/classify?imageUrl={image_url}")
+            response = requests.get(f"http://localhost:5166/api/Imagga/classify?keyword={keyword}")
             if response.status_code == 200:
-                self.url_founded.emit(response.content.decode('utf-8'))
+                self.keyword_founded.emit(response.content.decode('utf-8'))
             else:
-                self.error_occurred.emit(f"Failed to load image: {response.status_code}")
+                self.error_occurred.emit(f"Failed to retrieve weapons: {response.status_code}")
         except Exception as e:
             self.error_occurred.emit(f"An error occurred: {str(e)}")
 
+    def search_openai(self, prompt):
+        openai_endpoint = "http://localhost:5166/api/ChatGPT"  # Remplacez par votre endpoint
+
+        # Préparer les données avec le message
+        data = {
+            "Message": prompt
+        }
+
+        try:
+            # Envoyer une requête POST au serveur ASP.NET
+            response = requests.post(openai_endpoint, json=data)
+            if response.status_code == 200:
+                # Obtenir le texte de la réponse
+                result = response.json().get("response", "")
+                # Émettre le signal avec le texte
+                self.openai_founded.emit(result)
+            else:
+                self.error_occurred.emit(f"Erreur OpenAI: {response.status_code}")
+        except Exception as e:
+            self.error_occurred.emit(f"Erreur de connexion au serveur: {str(e)}")

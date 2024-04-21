@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QTableWidgetItem, QMessageBox, QStackedLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QScrollArea, QMessageBox, QStackedLayout,  QTableWidgetItem
 from PyQt5.QtCore import Qt
 from presenter import WeaponPresenter
 import qdarkstyle
@@ -19,6 +19,7 @@ class WeaponView(QMainWindow):
         self.create_all_weapons_page()
         self.create_weapon_details_page()
         self.create_search_page()
+        self.create_openai_page()
 
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.get_by_id_widget)
@@ -27,11 +28,13 @@ class WeaponView(QMainWindow):
         self.stacked_layout.addWidget(self.all_weapons_widget)
         self.stacked_layout.addWidget(self.weapon_details_widget)
         self.stacked_layout.addWidget(self.search_widget)
+        self.stacked_layout.addWidget(self.openai_widget)
 
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.stacked_layout)
         self.setCentralWidget(self.central_widget)
 
+        self.openai_button.clicked.connect(self.openai)
         self.load_button.clicked.connect(self.load_weapon)
         self.load_all_button.clicked.connect(self.load_all_weapons)
         self.add_button.clicked.connect(self.show_add_weapon_page)
@@ -41,14 +44,15 @@ class WeaponView(QMainWindow):
         self.update_save_button.clicked.connect(self.update_weapon)
         self.back_button_add.clicked.connect(self.show_get_by_id_page)
         self.back_button_update.clicked.connect(self.show_get_by_id_page)
-        self.search_button.clicked.connect(self.search_url)
+        self.search_button.clicked.connect(self.search_keyword)
         self.presenter.weapon_loaded.connect(self.show_weapon_details_page)
         self.presenter.all_weapons_loaded.connect(self.show_all_weapons_page)
         self.presenter.error_occurred.connect(self.display_error)
         self.presenter.weapon_added.connect(self.display_weapon_added_message)
         self.presenter.weapon_deleted.connect(self.display_weapon_deleted_message)
         self.presenter.weapon_updated.connect(self.display_weapon_updated_message)
-        self.presenter.url_founded.connect(self.show_search_page)
+        self.presenter.keyword_founded.connect(self.show_search_page)
+        self.presenter.openai_founded.connect(self.show_openai_page)
 
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
@@ -69,8 +73,10 @@ class WeaponView(QMainWindow):
         self.load_all_button = QPushButton("Load All Weapons")
         self.update_button = QPushButton("Update Weapon")
         self.delete_button = QPushButton("Delete Weapon")
-        self.url_input = QLineEdit()
+        self.keyword_input = QLineEdit()
         self.search_button = QPushButton("Search")
+        self.prompt_input = QLineEdit()
+        self.openai_button = QPushButton("OpenAI")
 
         layout = QVBoxLayout()
         layout.addWidget(self.weapon_id_input)
@@ -79,8 +85,10 @@ class WeaponView(QMainWindow):
         layout.addWidget(self.load_all_button)
         layout.addWidget(self.update_button)
         layout.addWidget(self.delete_button)
-        layout.addWidget(self.url_input)
+        layout.addWidget(self.keyword_input)
         layout.addWidget(self.search_button)
+        layout.addWidget(self.prompt_input)
+        layout.addWidget(self.openai_button)
 
         self.get_by_id_widget = QWidget()
         self.get_by_id_widget.setLayout(layout)
@@ -93,41 +101,84 @@ class WeaponView(QMainWindow):
         print(f"Error: {error_message}")
         
 
-# Search region ------------------------------------------------
+# OpenAI region ------------------------------------------------
 
-    def search_url(self):
-        url = self.url_input.text()
-        self.url_input.clear()
-        self.presenter.search_url(url)
-
-    def create_search_page(self):
-        self.search_widget = QWidget()
+    def create_openai_page(self):
+        self.openai_widget = QWidget()
         layout = QVBoxLayout()
-        self.search_widget.setLayout(layout)
+        self.openai_widget.setLayout(layout)
         self.result_label = QLabel()
         layout.addWidget(self.result_label)
         back_to_main_button = QPushButton("Back to Main")
         layout.addWidget(back_to_main_button)
         back_to_main_button.clicked.connect(self.show_get_by_id_page)
+        
+    def openai(self):
+        prompt = self.prompt_input.text()
+        self.prompt_input.clear()
+        self.presenter.search_openai(prompt)
+    
+    def show_openai_page(self, result):
+        self.result_label.setText(result)
+        self.stacked_layout.setCurrentIndex(6)
+
+
+# Search region ------------------------------------------------
+
+    def search_keyword(self):
+        keyword = self.keyword_input.text()
+        self.keyword_input.clear()
+        self.presenter.search_keyword(keyword)
+
+    def create_search_page(self):
+        self.search_widget = QWidget()
+        layout = QVBoxLayout()  # Disposition verticale
+        self.search_widget.setLayout(layout)
+
+        # Utilisation d'une zone de défilement pour afficher plusieurs armes
+        self.result_scroll_area = QScrollArea()
+        self.result_scroll_area.setWidgetResizable(True)  # Autoriser le redimensionnement
+        self.result_widget = QWidget()  # Widget pour afficher les résultats
+        self.result_layout = QVBoxLayout()  # Disposition des résultats
+        self.result_widget.setLayout(self.result_layout)
+        self.result_scroll_area.setWidget(self.result_widget)  # Ajouter le widget de résultats à la zone de défilement
+
+        # Ajouter le résultat et le bouton de retour
+        layout.addWidget(self.result_scroll_area)
+        back_to_main_button = QPushButton("Back to Main")
+        layout.addWidget(back_to_main_button)
+        back_to_main_button.clicked.connect(self.show_get_by_id_page)  # Retour à la page principale
 
     def show_search_page(self, result):
         try:
-            # Convertir la chaîne JSON en dictionnaire Python
-            result_dict = json.loads(result)
-            # Récupérer les 7 premiers tags avec leur niveau de confiance
-            tags_with_confidence = result_dict['result']['tags'][:7]    
-            # Trier les tags par ordre décroissant de confiance
-            sorted_tags = sorted(tags_with_confidence, key=lambda x: x['confidence'], reverse=True)    
-            # Extraire les noms des tags seulement
-            tags = [tag['tag']['en'] for tag in sorted_tags]    
-            # Créer une chaîne de texte avec les tags séparés par des sauts de ligne
-            tags_text = "\n".join(tags)    
-            # Afficher les tags dans le label
-            self.result_label.setText(tags_text)
-        except (json.JSONDecodeError, KeyError):
-            self.result_label.setText("No tags found")    
-        # Changer l'index du layout pour afficher la page de recherche
-        self.stacked_layout.setCurrentIndex(5)
+            # Effacer le layout actuel
+            for i in reversed(range(self.result_layout.count())):
+                self.result_layout.itemAt(i).widget().deleteLater()
+
+            # Convertir le JSON reçu en liste d'armes
+            weapons_list = json.loads(result)
+
+            # Pour chaque arme, créer un label avec ses détails
+            for weapon in weapons_list:
+                # Construire une chaîne de texte avec tous les attributs
+                weapon_info = "<b>Weapon Details:</b><br>"
+                for key, value in weapon.items():
+                    weapon_info += f"<b>{key}:</b> {value}<br>"
+
+                # Créer un label avec tous les détails
+                weapon_label = QLabel()
+                weapon_label.setTextInteractionFlags(Qt.TextSelectableByMouse)  # Permet de sélectionner le texte
+                weapon_label.setText(weapon_info)
+
+                # Ajouter le label au layout
+                self.result_layout.addWidget(weapon_label)
+
+            # Afficher la page de recherche
+            self.stacked_layout.setCurrentIndex(5)
+        except Exception as e:
+            error_message = f"An error occurred: {str(e)}"
+            error_label = QLabel(error_message)
+            self.result_layout.addWidget(error_label)
     
 # Add region ------------------------------------------------
     def create_add_weapon_page(self):
@@ -145,7 +196,7 @@ class WeaponView(QMainWindow):
         self.fire_rate_input.setPlaceholderText("Enter fire rate")
         self.ammo_count_input = QLineEdit()
         self.ammo_count_input.setPlaceholderText("Enter ammo count")
-        self.images_input = QLineEdit()  # Ajout du champ Images
+        self.images_input = QLineEdit()  
         self.images_input.setPlaceholderText("Enter images URL")
         self.save_button = QPushButton("Add")
         self.back_button_add = QPushButton("Back")
@@ -165,8 +216,8 @@ class WeaponView(QMainWindow):
         layout.addWidget(self.fire_rate_input)
         layout.addWidget(QLabel("Ammo Count:"))
         layout.addWidget(self.ammo_count_input)
-        layout.addWidget(QLabel("Images:"))  # Ajout du label pour Images
-        layout.addWidget(self.images_input)  # Ajout du champ Images
+        layout.addWidget(QLabel("Images:"))  
+        layout.addWidget(self.images_input)  
         layout.addWidget(self.save_button)
         layout.addWidget(self.back_button_add)
 

@@ -1,3 +1,6 @@
 {
-    "openInGitHub.providerType": "github"
+    "openInGitHub.providerType": "github",
+    "cSpell.words": [
+        "openai"
+    ]
 }
