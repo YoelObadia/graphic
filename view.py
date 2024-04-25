@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QScrollArea, QMessageBox, QStackedLayout,  QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QScrollArea, QMessageBox, QStackedLayout, QHBoxLayout, QGridLayout, QTableWidgetItem
 from PyQt5.QtCore import Qt
 from presenter import WeaponPresenter
 import qdarkstyle
@@ -67,31 +67,58 @@ class WeaponView(QMainWindow):
         Returns:
             None
         """
+        # Création des widgets de base
         self.weapon_id_input = QLineEdit()
+        self.weapon_id_input.setPlaceholderText("Enter Weapon ID")
         self.load_button = QPushButton("Load Weapon")
-        self.add_button = QPushButton("Add Weapon")
-        self.load_all_button = QPushButton("Load All Weapons")
         self.update_button = QPushButton("Update Weapon")
         self.delete_button = QPushButton("Delete Weapon")
-        self.keyword_input = QLineEdit()
-        self.search_button = QPushButton("Search")
-        self.prompt_input = QLineEdit()
-        self.openai_button = QPushButton("OpenAI")
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.weapon_id_input)
-        layout.addWidget(self.load_button)
-        layout.addWidget(self.add_button)
-        layout.addWidget(self.load_all_button)
-        layout.addWidget(self.update_button)
-        layout.addWidget(self.delete_button)
-        layout.addWidget(self.keyword_input)
-        layout.addWidget(self.search_button)
-        layout.addWidget(self.prompt_input)
-        layout.addWidget(self.openai_button)
+        # Boutons additionnels
+        self.add_button = QPushButton("Add Weapon")
+        self.load_all_button = QPushButton("Load All Weapons")
 
+        # Recherche de mot-clé
+        self.keyword_input = QLineEdit()  # Champ de recherche pour le mot-clé
+        self.keyword_input.setPlaceholderText("Search by keyword")
+        self.search_button = QPushButton("Search")  # Bouton de recherche
+
+        # Barre de recherche pour OpenAI
+        self.prompt_input = QLineEdit()  # Champ de saisie pour OpenAI
+        self.prompt_input.setPlaceholderText("Enter OpenAI prompt")
+        self.openai_button = QPushButton("OpenAI")  # Bouton OpenAI
+
+        # Disposition pour l'entrée de l'ID et les actions associées
+        id_layout = QHBoxLayout()
+        id_layout.addWidget(QLabel("Weapon ID:"))
+        id_layout.addWidget(self.weapon_id_input)
+        id_layout.addWidget(self.load_button)
+        id_layout.addWidget(self.update_button)
+        id_layout.addWidget(self.delete_button)
+
+        # Disposition des autres boutons
+        other_buttons_layout = QHBoxLayout()
+        other_buttons_layout.addWidget(self.add_button)
+        other_buttons_layout.addWidget(self.load_all_button)
+
+        # Disposition pour la recherche par mot-clé et OpenAI
+        search_layout = QVBoxLayout()  # Disposition verticale
+        search_layout.addWidget(QLabel("Search by Keyword:"))  # Label pour la recherche
+        search_layout.addWidget(self.keyword_input)  # Barre de recherche de mot-clé
+        search_layout.addWidget(self.search_button)  # Bouton de recherche
+        search_layout.addWidget(QLabel("OpenAI:"))  # Label pour OpenAI
+        search_layout.addWidget(self.prompt_input)  # Barre de recherche OpenAI
+        search_layout.addWidget(self.openai_button)  # Bouton OpenAI
+
+        # Disposition verticale pour tout contenir
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(id_layout)  # Section pour l'ID et les boutons
+        main_layout.addLayout(other_buttons_layout)  # Section pour les autres boutons
+        main_layout.addLayout(search_layout)  # Section pour la recherche par mot-clé et OpenAI
+
+        # Créer le widget avec la disposition
         self.get_by_id_widget = QWidget()
-        self.get_by_id_widget.setLayout(layout)
+        self.get_by_id_widget.setLayout(main_layout)
 
     def show_get_by_id_page(self):
         self.weapon_id_input.clear()
@@ -362,47 +389,67 @@ class WeaponView(QMainWindow):
 # Load all region ------------------------------------------------
     def create_all_weapons_page(self):
         """
-        Creates the page to display all loaded weapons.
+        Creates the page to display all loaded weapons with a grid layout and a scroll area.
         """
         self.all_weapons_widget = QWidget()
 
-        # Widgets for displaying all loaded weapons
-        self.all_weapons_label = QLabel()
+        # Scroll area for displaying all weapons
+        self.scroll_area = QScrollArea()  # Permet l'ajout de barres de défilement
+        self.scroll_area.setWidgetResizable(True)  # Autorise le redimensionnement du widget interne
+
+        # Widget pour le contenu du scroll area
+        self.scroll_content_widget = QWidget()  # Widget contenant le layout avec des lignes et des colonnes
+        self.scroll_layout = QGridLayout()  # Grid layout pour organiser les armes
+
+        # Disposition pour la page des armes
+        layout = QVBoxLayout()  # Disposition verticale pour tout contenir
+        layout.addWidget(self.scroll_area)  # Ajouter le scroll area
+
+        # Bouton de retour
         self.back_button_all_weapons = QPushButton("Back")
+        layout.addWidget(self.back_button_all_weapons, alignment=Qt.AlignCenter)  # Bouton de retour aligné au centre
+        self.back_button_all_weapons.clicked.connect(self.show_get_by_id_page)  # Retour à la page 'Get by ID'
 
-        # Layout for the all weapons page
-        layout = QVBoxLayout()
-        layout.addWidget(self.all_weapons_label)
-        layout.addWidget(self.back_button_all_weapons, alignment=Qt.AlignCenter)  # Align the back button to the center
+        # Mise en place du scroll content widget avec son layout
+        self.scroll_content_widget.setLayout(self.scroll_layout)
+        self.scroll_area.setWidget(self.scroll_content_widget)  # Assignation du widget de contenu au scroll area
 
-        # Set the layout for the widget
+        # Appliquer la disposition principale au widget
         self.all_weapons_widget.setLayout(layout)
-
-        # Connect the back button to the method to return to the 'Get by ID' page
-        self.back_button_all_weapons.clicked.connect(self.show_get_by_id_page)
 
     def show_all_weapons_page(self, weapons):
         """
-        Displays all loaded weapons in the all weapons page.
+        Displays all loaded weapons in the all weapons page using a grid layout.
         """
-        self.stacked_layout.setCurrentIndex(3)  # Index of the all weapons page
+        self.stacked_layout.setCurrentIndex(3)  # Index de la page des armes
 
-        # Construct the text to display all loaded weapons
-        weapons_text = "<h2>All Loaded Weapons</h2>"
-        for weapon in weapons:
-            weapons_text += f"<b>ID:</b> {weapon.Id}<br>"
-            weapons_text += f"<b>Name:</b> {weapon.Name}<br>"
-            weapons_text += f"<b>Type:</b> {weapon.Type}<br>"
-            weapons_text += f"<b>Manufacturer:</b> {weapon.Manufacturer}<br>"
-            weapons_text += f"<b>Caliber:</b> {weapon.Caliber}<br>"
-            weapons_text += f"<b>Magazine Capacity:</b> {weapon.MagazineCapacity}<br>"
-            weapons_text += f"<b>Fire Rate:</b> {weapon.FireRate}<br>"
-            weapons_text += f"<b>Ammo Count:</b> {weapon.AmmoCount}<br>"
-            weapons_text += f"<b>Images:</b> {weapon.Images}<br>"  # Afficher les images
-            weapons_text += "<hr>"  # Add a horizontal line between weapons
+        # Nettoyer le layout pour éviter la duplication de widgets
+        for i in reversed(range(self.scroll_layout.count())):
+            self.scroll_layout.itemAt(i).widget().deleteLater()
 
-        # Set the text to the label to display all loaded weapons
-        self.all_weapons_label.setText(weapons_text)
+        # Ajouter les armes au grid layout
+        for index, weapon in enumerate(weapons):
+            # Créer des étiquettes pour chaque attribut
+            weapon_label = QLabel()
+            weapon_text = (
+                f"<b>ID:</b> {weapon.Id}<br>"
+                f"<b>Name:</b> {weapon.Name}<br>"
+                f"<b>Type:</b> {weapon.Type}<br>"
+                f"<b>Manufacturer:</b> {weapon.Manufacturer}<br>"
+                f"<b>Caliber:</b> {weapon.Caliber}<br>"
+                f"<b>Magazine Capacity:</b> {weapon.MagazineCapacity}<br>"
+                f"<b>Fire Rate:</b> {weapon.FireRate}<br>"
+                f"<b>Ammo Count:</b> {weapon.AmmoCount}<br>"
+                f"<b>Images:</b> {weapon.Images}<br>"
+            )
+            weapon_label.setText(weapon_text)
+            weapon_label.setTextInteractionFlags(Qt.TextSelectableByMouse)  # Pour sélectionner le texte
+
+            # Placement dans le grid layout (colonnes de 2 armes par ligne)
+            row = index // 2  # Ligne
+            col = index % 2  # Colonne
+            self.scroll_layout.addWidget(weapon_label, row, col)  # Ajout au layout
+
 
     def load_all_weapons(self):
         self.presenter.load_all_weapons()
