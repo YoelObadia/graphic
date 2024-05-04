@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QScrollArea, QMessageBox, QStackedLayout, QHBoxLayout, QGridLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QLabel, QScrollArea, QMessageBox, QStackedLayout, QHBoxLayout, QGridLayout, QGroupBox, QTableWidgetItem
 from PyQt5.QtCore import Qt
 from presenter import WeaponPresenter
 import qdarkstyle
@@ -67,57 +67,79 @@ class WeaponView(QMainWindow):
         Returns:
             None
         """
-        # Création des widgets de base
-        self.weapon_id_input = QLineEdit()
-        self.weapon_id_input.setPlaceholderText("Enter Weapon ID")
-        self.load_button = QPushButton("Load Weapon")
-        self.update_button = QPushButton("Update Weapon")
-        self.delete_button = QPushButton("Delete Weapon")
+        self.get_by_id_widget = QWidget()  # Create the widget for this page
+        main_layout = QVBoxLayout()  # Use a vertical layout
 
-        # Boutons additionnels
+        # Group box for ID input and related actions
+        id_groupbox = QGroupBox("Load, Update, Delete Weapon by ID")  # Title of the group box
+        id_layout = QHBoxLayout()  # Use a horizontal layout
+        
+        self.weapon_id_input = QLineEdit()  # Input field for weapon ID
+        self.weapon_id_input.setPlaceholderText("Enter Weapon ID")  # Placeholder text
+        self.weapon_id_input.setToolTip("Enter the ID of the weapon to load, update, or delete.")  # Tooltip
+
+        # Buttons for various actions
+        self.load_button = QPushButton("Load")
+        self.load_button.setToolTip("Load weapon details by ID.")  # Tooltip for the button
+        self.update_button = QPushButton("Update")
+        self.update_button.setToolTip("Update weapon details by ID.")  # Tooltip
+        self.delete_button = QPushButton("Delete")
+        self.delete_button.setToolTip("Delete weapon by ID.")  # Tooltip
+
+        # Add widgets to the ID layout
+        id_layout.addWidget(QLabel("Weapon ID:"))  # Label for the ID input
+        id_layout.addWidget(self.weapon_id_input)  # Input field
+        id_layout.addWidget(self.load_button)  # Load button
+        id_layout.addWidget(self.update_button)  # Update button
+        id_layout.addWidget(self.delete_button)  # Delete button
+
+        id_groupbox.setLayout(id_layout)  # Set the layout for the group box
+
+        # Group box for additional actions
+        actions_groupbox = QGroupBox("Additional Actions")  # Title for the group box
+        actions_layout = QVBoxLayout()  # Use a vertical layout
+        
         self.add_button = QPushButton("Add Weapon")
+        self.add_button.setToolTip("Add a new weapon to the system.")  # Tooltip for adding weapons
         self.load_all_button = QPushButton("Load All Weapons")
+        self.load_all_button.setToolTip("Load all weapons in the system.")  # Tooltip for loading all weapons
 
-        # Recherche de mot-clé
-        self.keyword_input = QLineEdit()  # Champ de recherche pour le mot-clé
-        self.keyword_input.setPlaceholderText("Search by keyword")
-        self.search_button = QPushButton("Search")  # Bouton de recherche
+        # Add buttons to the actions layout
+        actions_layout.addWidget(self.add_button)
+        actions_layout.addWidget(self.load_all_button)
 
-        # Barre de recherche pour OpenAI
-        self.prompt_input = QLineEdit()  # Champ de saisie pour OpenAI
-        self.prompt_input.setPlaceholderText("Enter OpenAI prompt")
-        self.openai_button = QPushButton("OpenAI")  # Bouton OpenAI
+        actions_groupbox.setLayout(actions_layout)  # Set the layout for the group box
 
-        # Disposition pour l'entrée de l'ID et les actions associées
-        id_layout = QHBoxLayout()
-        id_layout.addWidget(QLabel("Weapon ID:"))
-        id_layout.addWidget(self.weapon_id_input)
-        id_layout.addWidget(self.load_button)
-        id_layout.addWidget(self.update_button)
-        id_layout.addWidget(self.delete_button)
+        # Group box for keyword search and OpenAI interaction
+        search_groupbox = QGroupBox("Search and OpenAI")  # Title for the group box
+        search_layout = QVBoxLayout()  # Vertical layout for the search and OpenAI interaction
+        
+        self.keyword_input = QLineEdit()  # Keyword search input
+        self.keyword_input.setPlaceholderText("Search by keyword")  # Placeholder text
+        self.search_button = QPushButton("Search")  # Search button
+        self.search_button.setToolTip("Search for weapons by keyword.")  # Tooltip
 
-        # Disposition des autres boutons
-        other_buttons_layout = QHBoxLayout()
-        other_buttons_layout.addWidget(self.add_button)
-        other_buttons_layout.addWidget(self.load_all_button)
+        self.prompt_input = QLineEdit()  # Input for OpenAI
+        self.prompt_input.setPlaceholderText("Enter OpenAI prompt")  # Placeholder text
+        self.openai_button = QPushButton("OpenAI")  # OpenAI button
+        self.openai_button.setToolTip("Send a prompt to OpenAI.")  # Tooltip
 
-        # Disposition pour la recherche par mot-clé et OpenAI
-        search_layout = QVBoxLayout()  # Disposition verticale
-        search_layout.addWidget(QLabel("Search by Keyword:"))  # Label pour la recherche
-        search_layout.addWidget(self.keyword_input)  # Barre de recherche de mot-clé
-        search_layout.addWidget(self.search_button)  # Bouton de recherche
-        search_layout.addWidget(QLabel("OpenAI:"))  # Label pour OpenAI
-        search_layout.addWidget(self.prompt_input)  # Barre de recherche OpenAI
-        search_layout.addWidget(self.openai_button)  # Bouton OpenAI
+        # Add widgets to the search layout
+        search_layout.addWidget(QLabel("Search weapons by Keyword:"))  # Label for the keyword input
+        search_layout.addWidget(self.keyword_input)  # Input field for keywords
+        search_layout.addWidget(self.search_button)  # Search button
+        search_layout.addWidget(QLabel("OpenAI:"))  # Label for OpenAI
+        search_layout.addWidget(self.prompt_input)  # Input field for OpenAI
+        search_layout.addWidget(self.openai_button)  # OpenAI button
 
-        # Disposition verticale pour tout contenir
-        main_layout = QVBoxLayout()
-        main_layout.addLayout(id_layout)  # Section pour l'ID et les boutons
-        main_layout.addLayout(other_buttons_layout)  # Section pour les autres boutons
-        main_layout.addLayout(search_layout)  # Section pour la recherche par mot-clé et OpenAI
+        search_groupbox.setLayout(search_layout)  # Set the layout for the group box
 
-        # Créer le widget avec la disposition
-        self.get_by_id_widget = QWidget()
+        # Add the group boxes to the main layout
+        main_layout.addWidget(id_groupbox)  # Group box for ID-related actions
+        main_layout.addWidget(actions_groupbox)  # Group box for additional actions
+        main_layout.addWidget(search_groupbox)  # Group box for search and OpenAI interaction
+
+        # Set the layout for the 'Get by ID' widget
         self.get_by_id_widget.setLayout(main_layout)
 
     def show_get_by_id_page(self):
