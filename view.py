@@ -44,7 +44,7 @@ class WeaponView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Weapon Details")
-        self.setGeometry(150, 150, 1050, 800)
+        self.setGeometry(150, 150, 1400, 800)
 
         self.presenter = WeaponPresenter()
 
@@ -323,14 +323,15 @@ class WeaponView(QMainWindow):
         data and potential errors.
         
         :param result: The `result` parameter in the `show_search_page` method is expected to be a JSON
-        string representing a list of weapons. This JSON string will be converted into a Python list of
+        string representing a dictionnary of weapons. This JSON string will be converted into a Python list of
         dictionaries where each dictionary represents the details of a weapon
         """
         try:
+            # Reinitialize the page for avoiding doubles of prevous searches
             for i in reversed(range(self.result_layout.count())):
                 self.result_layout.itemAt(i).widget().deleteLater()
 
-            # Convert JSON into weapons list
+            # Convert JSON into weapons dictionnary
             weapons_list = json.loads(result)
 
             for weapon in weapons_list:
@@ -572,6 +573,7 @@ class WeaponView(QMainWindow):
             "Images": self.update_images_input.text() 
         }
         self.presenter.update_weapon(int(weapon_id), updated_weapon_data)
+        self.weapon_id_input.clear()
         self.stacked_layout.setCurrentIndex(0)
 
     def display_weapon_updated_message(self, weapon_id):
@@ -625,16 +627,6 @@ class WeaponView(QMainWindow):
         Displays all loaded weapons in the 'All Weapons' page using a single-column layout.
         """
         self.stacked_layout.setCurrentIndex(3)  # Switch to the 'All Weapons' page
-
-        # Check if the scroll_layout exists and clear it safely
-        if hasattr(self, 'scroll_layout'):
-            try:
-                for i in reversed(range(self.scroll_layout.count())):
-                    item = self.scroll_layout.takeAt(i)  # Safely take each item
-                    if item.widget():  # If there's a widget, delete it
-                        item.widget().deleteLater()  
-            except Exception as e:
-                print(f"Error clearing scroll_layout: {e}")  # Handle any exceptions during clearing
 
         # Create a new vertical layout to avoid potential conflicts
         single_column_layout = QVBoxLayout()  
