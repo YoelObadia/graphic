@@ -14,3 +14,7 @@ If the response is valid, the presenter notify the view of a modification.
 Then, the view update's the window.
 
 You can use Visual Studio Code for this code.
+
+You have to modify, every time you see {port_number} in the URL's in the Presenter, by the port number you will see when
+you run your server C# in the URL of Swagger. 
+For example, if you see http://localhost:3000/swagger/index.html, so you will modify all the {port_number} in Presenter by 3000.
