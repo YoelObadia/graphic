@@ -49,7 +49,7 @@ class WeaponPresenter(QObject):
         weapon with that ID
         """
         try:
-            response = requests.get(f"http://localhost:5109/api/Weapon/{weapon_id}")
+            response = requests.get(f"http://localhost:{port_number}/api/Weapon/{weapon_id}")
             if response.status_code == 200:
                 weapon_data = response.json()
                 weapon = self.create_weapon_from_data(weapon_data)
@@ -76,7 +76,7 @@ class WeaponPresenter(QObject):
         exist.
         """
         try:
-            response = requests.get(f"http://localhost:5109/api/Weapon/{weapon_id}")
+            response = requests.get(f"http://localhost:{port_number}/api/Weapon/{weapon_id}")
             return response.status_code == 200
         except Exception as e:
             print(f"An error occurred while checking weapon existence: {str(e)}")
@@ -88,7 +88,7 @@ class WeaponPresenter(QObject):
         the success or failure of the operation.
         """
         try:
-            response = requests.get("http://localhost:5109/api/Weapon")
+            response = requests.get("http://localhost:{port_number}/api/Weapon")
             if response.status_code == 200:
                 weapons_data = response.json()
                 weapons = [self.create_weapon_from_data(weapon_data) for weapon_data in weapons_data]  
@@ -109,7 +109,7 @@ class WeaponPresenter(QObject):
         endpoint for adding a new
         """
         try:
-            response = requests.post("http://localhost:5109/api/Weapon", json=weapon_data)
+            response = requests.post("http://localhost:{port_number}/api/Weapon", json=weapon_data)
             if response.status_code == 201:
                 new_weapon_id = response.json()['id']
                 self.weapon_added.emit(new_weapon_id)
@@ -136,7 +136,7 @@ class WeaponPresenter(QObject):
         `False` after printing an error message.
         """
         try:
-            response = requests.put(f"http://localhost:5109/api/Weapon/{weapon_id}", json=updated_weapon_data)
+            response = requests.put(f"http://localhost:{port_number}/api/Weapon/{weapon_id}", json=updated_weapon_data)
             if response.status_code in {200, 204}:
                 self.weapon_updated.emit(weapon_id)
         except Exception as e:
@@ -157,7 +157,7 @@ class WeaponPresenter(QObject):
         response.
         """
         try:
-            response = requests.get(f"http://localhost:5109/api/Weapon/{weapon_id}")
+            response = requests.get(f"http://localhost:{port_number}/api/Weapon/{weapon_id}")
             if response.status_code == 200:
                 weapon_data = response.json()
                 return self.create_weapon_from_data(weapon_data)  
@@ -177,7 +177,7 @@ class WeaponPresenter(QObject):
         corresponding weapon
         """
         try:
-            response = requests.delete(f"http://localhost:5109/api/Weapon/{weapon_id}")
+            response = requests.delete(f"http://localhost:{port_number}/api/Weapon/{weapon_id}")
             if response.status_code == 200:
                 self.weapon_deleted.emit(weapon_id)
             else:
@@ -196,7 +196,7 @@ class WeaponPresenter(QObject):
         error during the
         """
         try:
-            response = requests.get(f"http://localhost:5109/api/Imagga/classify?keyword={keyword}")
+            response = requests.get(f"http://localhost:{port_number}/api/Imagga/classify?keyword={keyword}")
             if response.status_code == 200:
                 self.keyword_founded.emit(response.content.decode('utf-8'))
             else:
@@ -220,7 +220,7 @@ class WeaponPresenter(QObject):
         }
 
         try:
-            response = requests.post("http://localhost:5109/api/ChatGPT", json=data)
+            response = requests.post("http://localhost:{port_number}/api/ChatGPT", json=data)
             if response.status_code == 200:
                 result = response.json().get("response", "")
                 self.openai_founded.emit(result)
